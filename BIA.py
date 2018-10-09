@@ -198,9 +198,9 @@ def BlindAlghorithm(startCoordinates, iterations, func):
 
 
 
-def SimulatedAnnealingAlghorithm(startCoordinates, func):
+def SimulatedAnnealingAlghorithm(startCoordinates, func, printing = False, draw = False):
     temperature = 50000
-    tf= 0.00000001
+    tf= 0.00001
     lamb = 0.99
 
 
@@ -224,11 +224,12 @@ def SimulatedAnnealingAlghorithm(startCoordinates, func):
         # calculate z
         newIndividualPoint.setZ( GetFunction(newIndividualPoint.coordinates, func))
 
-        # draw point    
-        #ax.scatter(newIndividualPoint.coordinates[0],newIndividualPoint.coordinates[1],newIndividualPoint.z,color="k",s=20)
-        #print (newIndividualPoint.z)
+        # draw point
+        if(draw == True):  
+            ax.scatter(newIndividualPoint.coordinates[0],newIndividualPoint.coordinates[1],newIndividualPoint.z,color="k",s=20)
+        if(printing == True):
+            print (newIndividualPoint.z)
 
-        # if prev individualPoint == current individualPoint => we found minimum
         if(lowestIndividualPoint.z > newIndividualPoint.z):
             lowestIndividualPoint = newIndividualPoint
         else:
@@ -238,13 +239,18 @@ def SimulatedAnnealingAlghorithm(startCoordinates, func):
                 lowestIndividualPoint = newIndividualPoint
         temperature *= lamb
 
-    ax.scatter(lowestIndividualPoint.coordinates[0],lowestIndividualPoint.coordinates[1],lowestIndividualPoint.z,color="r",s=40)
-    #print ("Simulated Annealing finnaly found: ")
-    #print (lowestIndividualPoint.z)
+
+    if(draw == True):
+        ax.scatter(lowestIndividualPoint.coordinates[0],lowestIndividualPoint.coordinates[1],lowestIndividualPoint.z,color="r",s=40)
+
+    if(printing == True):
+        print ("Simulated Annealing finnaly found: ")
+        print (lowestIndividualPoint.z)
 
 
-    fig.colorbar(surf, shrink=0.5, aspect=5)
-    #plt.show()
+    if(draw == True):
+        fig.colorbar(surf, shrink=0.5, aspect=5)
+        plt.show()
     return lowestIndividualPoint.z
 
 
@@ -265,29 +271,43 @@ stepDrawing = 1
 #  'schwefel'
 
 #HillClimbAlghorithm(startPoint, 'schwefel')
+
+
+
+#SimulatedAnnealingAlghorithm(startPoint, 'schwefel', True, True)
+
 count = 5
 totalSA = 0
-print ("Started simulated annealing : ")
+totalHC = 0
+print ("Started simulated annealing  for schwefel function: ")
 for i in range(count):    
-    tmp = SimulatedAnnealingAlghorithm(startPoint, 'schwefel')
-    print (tmp)
-    totalSA += tmp
+    tmpSA_schwefel = SimulatedAnnealingAlghorithm(startPoint, 'schwefel')
+    tmpHC_schwefel = HillClimbAlghorithm(startPoint, 'schwefel')
+    print ("SA:\t" + str(tmpSA_schwefel))
+    print("HC:\t"  + str(tmpHC_schwefel))
+    print("")
+    totalSA += tmpSA_schwefel
+    totalHC += tmpHC_schwefel
 averageSA = totalSA/count
+averageHC = totalHC/count
 
 print ("Average Simulated annealing:")
 print ( averageSA)
 
-
-totalHC = 0
-print ("Started hill climb : ")
-for i in range(count):    
-    tmp = HillClimbAlghorithm(startPoint, 'schwefel')
-    print (tmp)
-    totalHC += tmp
-averageHC = totalHC/count
-
 print ("Average hill climb:")
 print ( averageHC)
+
+
+# totalHC = 0
+# print ("Started hill climb : ")
+# for i in range(count):    
+#     tmp = HillClimbAlghorithm(startPoint, 'schwefel')
+#     print (tmp)
+#     totalHC += tmp
+# averageHC = totalHC/count
+
+# print ("Average hill climb:")
+# print ( averageHC)
 
 
 #BlindAlghorithm(startPoint,100, 'schwefel')
