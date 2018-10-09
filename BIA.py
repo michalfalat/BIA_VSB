@@ -78,6 +78,14 @@ def FindGlobalMininum(individualPoints):
     #print(individualPoint.z)
     return individualPoint
 
+def FindGlobalMininumIndex(individualPoints):
+    index = 0
+    for i in range(len(individualPoints)):
+        if(individualPoints[i].z < individualPoint.z):
+            index = i
+    #print(individualPoint.z)
+    return index
+
 def GenerateRandomIndividualPoint(defMin, defMax):
     ranCoordinates = (randint(defMin, defMax),randint(defMin, defMax))
     individualPoint = IndividualPoint(ranCoordinates)
@@ -108,6 +116,38 @@ def GetFunction(data, func):
     elif func == 'schwefel':
         return SchwefelFunction(data)
         
+
+def SOMAAlghorithm(func):
+    pathLength = 3
+    stepSize = 0.11
+    stepCounter = stepSize
+    PRT = (0, 1)
+
+    dimensionCount = 2
+
+    individualPoints = []
+    coordinates =  np.random.multivariate_normal((0,0),[[1,0],[0 ,100]],10)
+    for i in range(len(coordinates)):
+        individualPoints.append(IndividualPoint((coordinates[i][0], coordinates[i][1]))) 
+    
+    for i in range(len(individualPoints)):  
+        individualPoints[i].setZ(GetFunction(individualPoints[i].coordinates, func))
+    
+    leaderIndex = FindGlobalMininumIndex(individualPoints) 
+
+    
+    for i in range(len(individualPoints)):
+        if(i !=  leaderIndex):
+                newCoord = []
+               for j in range(dimensionCount):
+                   x_i = individualPoints[i].coordinates[j]
+                   x_l = individualPoints[leaderIndex].coordinates[j]
+                   newCoord.append( x_i + (x_l - x_i)  - stepCounter * PRT[j])
+                   stepCounter += stepSize
+                newRes = GetFunction(newCoord, func)
+                if(newRes < individualPoints[i]):
+                    individualPoints[i].coordinates = newCoord
+
 
 def HillClimbAlghorithm(startCoordinates, func):  
 
@@ -276,26 +316,26 @@ stepDrawing = 1
 
 #SimulatedAnnealingAlghorithm(startPoint, 'schwefel', True, True)
 
-count = 5
-totalSA = 0
-totalHC = 0
-print ("Started simulated annealing  for schwefel function: ")
-for i in range(count):    
-    tmpSA_schwefel = SimulatedAnnealingAlghorithm(startPoint, 'schwefel')
-    tmpHC_schwefel = HillClimbAlghorithm(startPoint, 'schwefel')
-    print ("SA:\t" + str(tmpSA_schwefel))
-    print("HC:\t"  + str(tmpHC_schwefel))
-    print("")
-    totalSA += tmpSA_schwefel
-    totalHC += tmpHC_schwefel
-averageSA = totalSA/count
-averageHC = totalHC/count
+# count = 5
+# totalSA = 0
+# totalHC = 0
+# print ("Started simulated annealing  for schwefel function: ")
+# for i in range(count):    
+#     tmpSA_schwefel = SimulatedAnnealingAlghorithm(startPoint, 'schwefel')
+#     tmpHC_schwefel = HillClimbAlghorithm(startPoint, 'schwefel')
+#     print ("SA:\t" + str(tmpSA_schwefel))
+#     print("HC:\t"  + str(tmpHC_schwefel))
+#     print("")
+#     totalSA += tmpSA_schwefel
+#     totalHC += tmpHC_schwefel
+# averageSA = totalSA/count
+# averageHC = totalHC/count
 
-print ("Average Simulated annealing:")
-print ( averageSA)
+# print ("Average Simulated annealing:")
+# print ( averageSA)
 
-print ("Average hill climb:")
-print ( averageHC)
+# print ("Average hill climb:")
+# print ( averageHC)
 
 
 # totalHC = 0
