@@ -80,6 +80,7 @@ def FindGlobalMininum(individualPoints):
 
 def FindGlobalMininumIndex(individualPoints):
     index = 0
+    individualPoint = individualPoints[0]
     for i in range(len(individualPoints)):
         if(individualPoints[i].z < individualPoint.z):
             index = i
@@ -103,6 +104,23 @@ def GenerateRandomIndividualPointForSA(mainIndividualPoint):
     individualPoint = IndividualPoint((coordinates[0][0], coordinates[0][1]))
     return individualPoint
 
+def GenerateRandomForSOMA(min,max):
+    x = np.random.uniform(min,max,20)
+    y = np.random.uniform(min,max,20)
+    field = []
+    for i in range(len(x)):
+        field.append(IndividualPoint((x[i],y[i]),0))
+    return field
+
+def GetPRT(dim,ptr_value):
+    x = np.random.uniform(0,1,dim)
+    for i in range(len(x)):
+        if (x[i] < ptr_value):
+            x[i] = 1
+        else:
+            x[i] = 0
+    
+    return x
 
 def GetFunction(data, func):
     if func =='sphere':
@@ -117,37 +135,100 @@ def GetFunction(data, func):
         return SchwefelFunction(data)
         
 
-def SOMAAlghorithm(func):
+# def SOMAAlghorithm(func):
+#     pathLength = 3
+#     stepSize = 0.11
+#     stepCounter = stepSize
+#     PRT = (0, 1)
+
+#     dimensionCount = 2
+
+#     individualPoints = []
+#     coordinates =  np.random.multivariate_normal((0,0),[[1,0],[0 ,100]],10)
+#     for i in range(len(coordinates)):
+#         individualPoints.append(IndividualPoint((coordinates[i][0], coordinates[i][1]))) 
+    
+#     for i in range(len(individualPoints)):  
+#         individualPoints[i].setZ(GetFunction(individualPoints[i].coordinates, func))
+    
+#     leaderIndex = FindGlobalMininumIndex(individualPoints) 
+
+    
+#     for i in range(len(individualPoints)):
+#         if(i !=  leaderIndex):
+#             newCoord = []
+#                for j in range(dimensionCount):
+#                    x_i = individualPoints[i].coordinates[j]
+#                    x_l = individualPoints[leaderIndex].coordinates[j]
+#                    newCoord.append( x_i + (x_l - x_i)  - stepCounter * PRT[j])
+#                    stepCounter += stepSize
+#                 newRes = GetFunction(newCoord, func)
+#                 if(newRes < individualPoints[i]):
+#                     individualPoints[i].coordinates = newCoord
+
+def SomaAlgorithm(func):
     pathLength = 3
-    stepSize = 0.11
-    stepCounter = stepSize
-    PRT = (0, 1)
+    step = 0.11
+    ptrValue = 0.1
 
-    dimensionCount = 2
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    x = y = np.arange(def_min, def_max, stepDrawing)
+    X, Y = np.meshgrid(x, y)
+    zs = np.array([GetFunction((x,y), func) for x,y in zip(np.ravel(X), np.ravel(Y))])  
+    Z = zs.reshape(X.shape)
+    ax.plot_surface(X, Y, Z, rstride=1, cstride=1, cmap='viridis', edgecolor='none')
 
-    individualPoints = []
-    coordinates =  np.random.multivariate_normal((0,0),[[1,0],[0 ,100]],10)
-    for i in range(len(coordinates)):
-        individualPoints.append(IndividualPoint((coordinates[i][0], coordinates[i][1]))) 
+    field = GenerateRandomForSOMA(def_min, def_max)
+
+    for i in range(len(field)):  
+        field[i].setZ(GetFunction(field[i].coordinates, func))
+
+    for u in range(len(field)):
+        ax.scatter(field[u].coordinates[0],field[u].coordinates[1],field[u].z-0.2,color="black",s=20)
+        
     
-    for i in range(len(individualPoints)):  
-        individualPoints[i].setZ(GetFunction(individualPoints[i].coordinates, func))
-    
-    leaderIndex = FindGlobalMininumIndex(individualPoints) 
+    leaderIndex = FindGlobalMininumIndex(field) 
+    leader = field[leaderIndex]    
 
-    
-    for i in range(len(individualPoints)):
-        if(i !=  leaderIndex):
-                newCoord = []
-               for j in range(dimensionCount):
-                   x_i = individualPoints[i].coordinates[j]
-                   x_l = individualPoints[leaderIndex].coordinates[j]
-                   newCoord.append( x_i + (x_l - x_i)  - stepCounter * PRT[j])
-                   stepCounter += stepSize
-                newRes = GetFunction(newCoord, func)
-                if(newRes < individualPoints[i]):
-                    individualPoints[i].coordinates = newCoord
+    ax.scatter(leader.coordinates[0],leader.coordinates[1],leader.z-0.2,color="r",s=20)
 
+    for s in range(10):
+        plt.show()
+        for k in range(len(field)):
+            if (leader == field[k]):
+                continue
+            
+            jumps = []
+            for i in range(0,int(pathLength/step),1):
+                PRT = GetPRT(2,ptrValue)
+                w_x = field[k].coordinates[0] + (leader.coordinates[0] - field[k].coordinates[0]) * (i* step) * PRT[0]
+                w_y = field[k].coordinates[1] + (leader.coordinates[1] - field[k].coordinates[1]) * (i* step) * PRT[1]
+                w = IndividualPoint((w_x,w_y),0)
+                w.z = GetFunction(w.coordinates, func)
+                jumps.append(w)
+            
+            _newLeaderIndex = FindGlobalMininumIndex(jumps)
+            _new_pos = jumps[_newLeaderIndex]
+            field[k] = _new_pos
+        
+        ax.clear()
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        x = y = np.arange(def_min, def_max, stepDrawing)
+        X, Y = np.meshgrid(x, y)
+        zs = np.array([GetFunction((x,y), func) for x,y in zip(np.ravel(X), np.ravel(Y))])  
+        Z = zs.reshape(X.shape)
+        ax.plot_surface(X, Y, Z, rstride=1, cstride=1, cmap='viridis', edgecolor='none')
+
+        for h in range(len(field)):
+            ax.scatter( field[h].coordinates[0],field[h].coordinates[1],field[h].z-0.2,color="black",s=20)
+
+        leaderIndex = FindGlobalMininumIndex(field) 
+        leader = field[leaderIndex]
+
+        ax.scatter(leader.coordinates[0],leader.coordinates[1],leader.z-0.2,color="r",s=20)
+        plt.show()
 
 def HillClimbAlghorithm(startCoordinates, func):  
 
@@ -395,3 +476,9 @@ def_max =  3
 
 # HillClimbAlghorithm(startPoint, 'ackley')
 # BlindAlghorithm(startPoint, 100, 'ackley')
+
+step = 0.05
+stepDrawing = 0.5
+def_min = -5
+def_max =  5
+SomaAlgorithm('ackley')
