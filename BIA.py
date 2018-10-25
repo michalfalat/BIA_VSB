@@ -18,6 +18,22 @@ class IndividualPoint:
     def __str__(self):
         return ("IndividualPoint on:",self.coordinates,"With z:",self.z)
 
+class Particle:
+    def __init__(self, coordinates, z=0, velocity=[0,0]):
+        self.coordinates = coordinates
+        self.z = z
+        self.velocity = velocity
+
+    def setZ(self, z):
+        self.z = z
+
+    def setVelocity(self, velocity):
+        self.velocity = velocity
+
+    def __str__(self):
+        return ("Particle on:",self.coordinates,"With z:",self.z)
+
+
 def SphereFunction(coordinates):
     result = 0.0
     for i in range(0,len(coordinates)):
@@ -112,6 +128,14 @@ def GenerateRandomForSOMA(min,max):
         field.append(IndividualPoint((x[i],y[i]),0))
     return field
 
+def GenerateParticles(min,max,  initVelocity ,count = 20,):
+    x = np.random.uniform(min,max,count)
+    y = np.random.uniform(min,max,count)
+    particles = []
+    for i in range(len(x)):
+        particles.append(Particle([x[i],y[i]],0,initVelocity))
+    return particles
+
 def GetPRT(dim,ptr_value):
     x = np.random.uniform(0,1,dim)
     for i in range(len(x)):
@@ -134,37 +158,6 @@ def GetFunction(data, func):
     elif func == 'schwefel':
         return SchwefelFunction(data)
         
-
-# def SOMAAlghorithm(func):
-#     pathLength = 3
-#     stepSize = 0.11
-#     stepCounter = stepSize
-#     PRT = (0, 1)
-
-#     dimensionCount = 2
-
-#     individualPoints = []
-#     coordinates =  np.random.multivariate_normal((0,0),[[1,0],[0 ,100]],10)
-#     for i in range(len(coordinates)):
-#         individualPoints.append(IndividualPoint((coordinates[i][0], coordinates[i][1]))) 
-    
-#     for i in range(len(individualPoints)):  
-#         individualPoints[i].setZ(GetFunction(individualPoints[i].coordinates, func))
-    
-#     leaderIndex = FindGlobalMininumIndex(individualPoints) 
-
-    
-#     for i in range(len(individualPoints)):
-#         if(i !=  leaderIndex):
-#             newCoord = []
-#                for j in range(dimensionCount):
-#                    x_i = individualPoints[i].coordinates[j]
-#                    x_l = individualPoints[leaderIndex].coordinates[j]
-#                    newCoord.append( x_i + (x_l - x_i)  - stepCounter * PRT[j])
-#                    stepCounter += stepSize
-#                 newRes = GetFunction(newCoord, func)
-#                 if(newRes < individualPoints[i]):
-#                     individualPoints[i].coordinates = newCoord
 
 def SomaAlgorithm(func):
     pathLength = 3
@@ -193,18 +186,20 @@ def SomaAlgorithm(func):
 
     ax.scatter(leader.coordinates[0],leader.coordinates[1],leader.z-0.2,color="r",s=20)
 
-    for s in range(10):
-        plt.show()
+    for s in range(100):
         for k in range(len(field)):
             if (leader == field[k]):
                 continue
             
             jumps = []
             for i in range(0,int(pathLength/step),1):
-                PRT = GetPRT(2,ptrValue)
-                w_x = field[k].coordinates[0] + (leader.coordinates[0] - field[k].coordinates[0]) * (i* step) * PRT[0]
-                w_y = field[k].coordinates[1] + (leader.coordinates[1] - field[k].coordinates[1]) * (i* step) * PRT[1]
-                w = IndividualPoint((w_x,w_y),0)
+                dim = len(leader.coordinates)
+                PRT = GetPRT(dim,ptrValue)
+                newCoords = []
+                for d in range(0,dim):
+                    crd = field[k].coordinates[d] + (leader.coordinates[d] - field[k].coordinates[d]) * (i* step) * PRT[d]
+                    newCoords.append(crd)
+                w = IndividualPoint(newCoords,0)
                 w.z = GetFunction(w.coordinates, func)
                 jumps.append(w)
             
@@ -213,8 +208,8 @@ def SomaAlgorithm(func):
             field[k] = _new_pos
         
         ax.clear()
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
+        #fig = plt.figure()
+        #ax = fig.add_subplot(111, projection='3d')
         x = y = np.arange(def_min, def_max, stepDrawing)
         X, Y = np.meshgrid(x, y)
         zs = np.array([GetFunction((x,y), func) for x,y in zip(np.ravel(X), np.ravel(Y))])  
@@ -228,7 +223,65 @@ def SomaAlgorithm(func):
         leader = field[leaderIndex]
 
         ax.scatter(leader.coordinates[0],leader.coordinates[1],leader.z-0.2,color="r",s=20)
-        plt.show()
+        plt.pause(0.2)
+    plt.show()
+
+def GetVelocity(c1,c2, weight,  vi, xi, pBest, gBest):
+     return  weight * vi + (c1 * random.uniform(0,1)) * (pBest - xi) + (c2 * random.uniform(0,1)) * (gBest - xi)
+
+def ParticleSwarm(func, c1, c2):
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    x = y = np.arange(def_min, def_max, stepDrawing)
+    X, Y = np.meshgrid(x, y)
+    zs = np.array([GetFunction((x,y), func) for x,y in zip(np.ravel(X), np.ravel(Y))])  
+    Z = zs.reshape(X.shape)
+    #ax.plot_surface(X, Y, Z, rstride=1, cstride=1, cmap='viridis', edgecolor='none')
+
+    initialVelocity = (abs(def_min) + abs(def_max)) /20
+    initialVelVector = [initialVelocity,initialVelocity]
+    iterations = 100
+    weightStart = 0.9
+    weightEnd = 0.4
+
+    particles = GenerateParticles(def_min, def_max,initialVelVector,20)
+    for particle in particles:
+        particle.setZ(GetFunction(particle.coordinates, func))
+    
+    gBest = FindGlobalMininum(particles)
+    pBest = particles[0]
+    # for part in range(len(particles)):
+    #     p_j = random // todo
+        
+
+    for i in range(iterations):
+        for particle in particles:
+            weight = weightStart - ((weightStart - weightEnd) * i)/iterations
+            for crd in range(len(particle.coordinates)):
+                velocity = GetVelocity(c1,c2, weight, particle.velocity[crd], particle.coordinates[crd], pBest.coordinates[crd], gBest.coordinates[crd])
+                if(velocity > initialVelocity):
+                     velocity = initialVelocity
+                if(velocity < -initialVelocity):
+                    velocity = -initialVelocity
+                particle.velocity[crd] = velocity
+                newVal = particle.coordinates[crd] + velocity
+                particle.coordinates[crd] = newVal
+                if(particle.coordinates[crd]< def_min or particle.coordinates[crd] > def_max):
+                    particle.coordinates[crd] = random.uniform(def_min,def_max)
+            particle.setZ(GetFunction(particle.coordinates, func))
+            if(particle.z < pBest.z):
+                pBest = particle
+            ax.scatter(particle.coordinates[0],particle.coordinates[1],particle.z-0.2,color="b",s=20)
+        
+            if(pBest.z < gBest.z):
+                gBest = pBest
+        ax.scatter(gBest.coordinates[0],gBest.coordinates[1],gBest.z-0.2,color="r",s=20)
+        plt.pause(0.1)
+        
+        ax.clear()
+        ax.plot_surface(X, Y, Z, rstride=1, cstride=1, cmap='viridis', edgecolor='none')
+    plt.show()
 
 def HillClimbAlghorithm(startCoordinates, func):  
 
@@ -478,7 +531,8 @@ def_max =  3
 # BlindAlghorithm(startPoint, 100, 'ackley')
 
 step = 0.05
-stepDrawing = 0.5
-def_min = -5
-def_max =  5
-SomaAlgorithm('ackley')
+stepDrawing = 1
+def_min = -30
+def_max =  30
+#SomaAlgorithm('ackley')
+ParticleSwarm('sphere',0.2,0.2)
