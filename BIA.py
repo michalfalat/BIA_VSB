@@ -250,10 +250,7 @@ def ParticleSwarm(func, c1, c2):
         particle.setZ(GetFunction(particle.coordinates, func))
     
     gBest = FindGlobalMininum(particles)
-    pBest = particles[0]
-    # for part in range(len(particles)):
-    #     p_j = random // todo
-        
+    pBest = particles[0]        
 
     for i in range(iterations):
         for particle in particles:
@@ -370,7 +367,92 @@ def BlindAlghorithm(startCoordinates, iterations, func):
     print("Plot draw  finished")
     return lowestIndividualPoint.z
 
+def DiffetentialAlgorithm(defMin, defMax, func):
+    F = 0.7
+    CR = 0.75
+    popLength = 20
+    generations = 40
+    dim = 2
+    population = []
+    newPopulation = []
+    for i in range(popLength):
+        pt = GenerateRandomIndividualPoint(defMin, defMax)
+        population.append(pt)
+        newPopulation.append(pt)
+        tmpZ = GetFunction(population[i].coordinates, func)
+        population[i].setZ(tmpZ)
+        newPopulation[i].setZ(tmpZ)
 
+    minimum = FindGlobalMininum(population)
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    x = y = np.arange(def_min, def_max, stepDrawing)
+    X, Y = np.meshgrid(x, y)
+    zs = np.array([GetFunction((x,y), func) for x,y in zip(np.ravel(X), np.ravel(Y))])  
+    Z = zs.reshape(X.shape)
+    ax.plot_surface(X, Y, Z, rstride=1, cstride=1,cmap='viridis', edgecolor='none')
+
+    for gen in range(generations):
+        ax.clear()
+        ax.plot_surface(X, Y, Z, rstride=1, cstride=1,cmap='viridis', edgecolor='none')
+        for i in range(popLength):
+            finalCoords = []
+            #newPoint=  IndividualPoint([0,0])
+            diffVector = GetDifferentialVector(population[i])
+            noise = CalculateNoise(diffVector[0], diffVector[1], diffVector[2], F, dim)
+            #noise = CalculateNoiseCurrentToBest(population[i], minimum, diffVector[0], diffVector[1], F, dim)
+            for coor in range(dim):
+                rNumber = random.uniform(0,1)
+                if (rNumber < CR):
+                    #newPoint.coordinates[coor] = noise.coordinates[coor]
+                    finalCoords.append(noise.coordinates[coor])
+                else:
+                    #newPoint.coordinates[coor] = population[i].coordinates[coor]
+                    finalCoords.append(population[i].coordinates[coor])
+            tmpZ = GetFunction(finalCoords, func)
+            if(tmpZ < newPopulation[i].z):
+                newPopulation[i].z = tmpZ
+                newPopulation[i].coordinates = finalCoords
+            minimum = FindGlobalMininum(newPopulation)
+            ax.scatter(newPopulation[i].coordinates[0], newPopulation[i].coordinates[1], newPopulation[i].z-0.2, color="b", s=20)
+            #ax.scatter(minimum.coordinates[0], minimum.coordinates[1], minimum.z-0.2, color="r", s=20)
+            #plt.AddScatters(ax, population, "r")
+        plt.pause(0.05)
+    plt.show()
+        
+
+def CalculateNoise(p1,p2,p3, F, dim):
+    coords = []
+    for i in range(dim):
+        coords.append(p1.coordinates[i] + F * (p2.coordinates[i] - p3.coordinates[i])),
+    point = IndividualPoint(coords)
+    return point
+
+
+def CalculateNoiseCurrentToBest(pActual, pBest, p1, p2, F, dim):
+    lam = 0.6
+    coords = []
+    for i in range(dim):
+        coords.append( pActual.coordinates[i] + lam * (pBest.coordinates[i] - pActual.coordinates[i]) + F * (p1.coordinates[i] - p2.coordinates[i])),
+    point = IndividualPoint(coords)
+    return point
+
+
+def GetDifferentialVector(individual):
+    points = []
+    for i in range(3):
+        equality = True
+        while equality:
+            equality = False
+            currentPoint = GenerateRandomIndividualPoint(def_min, def_max)
+            if(individual.coordinates[0] == currentPoint.coordinates[0] and individual.coordinates[1] == currentPoint.coordinates[1]):
+                equality = True
+            for i in range(len(points)):
+                if(points[i].coordinates[0] == currentPoint.coordinates[0] and points[i].coordinates[1] == currentPoint.coordinates[1]):
+                    equality = True
+        points.append(currentPoint)
+    return points
 
 def SimulatedAnnealingAlghorithm(startCoordinates, func, printing = False, draw = False):
     temperature = 50000
@@ -535,4 +617,6 @@ stepDrawing = 1
 def_min = -30
 def_max =  30
 #SomaAlgorithm('ackley')
-ParticleSwarm('sphere',0.2,0.2)
+#ParticleSwarm('sphere',0.2,0.2)
+
+DiffetentialAlgorithm(def_min,def_max, 'sphere')
