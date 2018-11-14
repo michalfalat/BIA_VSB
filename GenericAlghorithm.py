@@ -30,6 +30,15 @@ def CalcPopulationDistance(population):
     return distance
 
 
+def FindPopulationMinimum(populations):
+    minimum = CalcPopulationDistance(populations[0])
+    for i in range(len(populations)):
+        tmpDistance = CalcPopulationDistance(populations[i])
+        if(tmpDistance < minimum):
+            minimum = tmpDistance
+    return minimum
+
+
 def Mutation(population, idx1, idx2):
     tmpCity = population[idx1]
     population[idx1] = population[idx2]
@@ -38,25 +47,27 @@ def Mutation(population, idx1, idx2):
 
 
 def Crossover(p1, p2):
-    cityLength = len(p1.cities)
+
+    newPop = p1
+    cityLength = len(p1)
+    start = random.randint(0, cityLength-1)
+    end = random.randint(0, cityLength-1)
     for i in range(cityLength):
-            if (i >= start and i <= end):
-                for j in range(cityLength):
-                    City currentCity = i2.cities.get(j)
-                    boolean replace = true
-                    for (int k=0; k < nI.cities.size(); k++) {
-                        if (k >= i and k <= end) continue
-                        if (currentCity.equals(nI.cities.get(k))) {
-                            replace = false;
-                            break; }
-                    }
+        if (i >= start and i <= end):
+            for j in range(cityLength):
+                currentCity = p2[j]
+                replace = True
+                for k in range(cityLength):
+                    if (k >= i and k <= end):
+                        continue
+                    if (currentCity == newPop[k]):
+                        replace = False
+                        break
 
-                    if (replace)
-                        nI.cities.set(i, currentCity);
-                        break;
-                }
-
-        return nI
+                if replace == True:
+                    newPop[i] = currentCity
+                    break
+    return newPop
 
 
 def GeneratePopulationOfCities(popSize, cities):
@@ -70,6 +81,7 @@ def GeneratePopulationOfCities(popSize, cities):
 
 
 def GenericAlghorithm():
+    popSize = 50
     cities = []
     cities.append(City(60, 200, 'A', 0))
     cities.append(City(80, 200, 'B', 1))
@@ -92,8 +104,8 @@ def GenericAlghorithm():
     cities.append(City(60, 20, 'S', 18))
     cities.append(City(160, 20, 'T', 19))
 
-    population = GeneratePopulationOfCities(50, cities)
-    for i in range(len(population)):
+    population = GeneratePopulationOfCities(popSize, cities)
+    for i in range(popSize):
         currentPop = ''
         currentPopDistance = CalcPopulationDistance(population[i])
         for j in range(len(population[i])):
@@ -101,11 +113,28 @@ def GenericAlghorithm():
             currentPop += (population[i][j].name + ", ")
         print(currentPop + " distance: " + str(currentPopDistance))
 
+    tMax = 20
 
-    tMax = 100
-    # TODO two-point crossover
+    minDistance = CalcPopulationDistance(population[0])
+    globalDistance = minDistance
     for t in range(tMax):
+        for i in range(popSize):
+            newPopulation = []
+            cityCount = len(population[i])
+            rndParentIdx = random.randint(0, cityCount-1)
+            parent = population[rndParentIdx]
+            newIndividual = Crossover(parent, population[i])
+            rndIdx1 = random.randint(0, popSize-1)
+            rndIdx2 = random.randint(0, popSize-1)
+            newPopulation = Mutation(population, rndIdx1, rndIdx2)
+            minDistance = FindPopulationMinimum(newPopulation)
+        if(minDistance < globalDistance):
+            globalDistance = minDistance
 
+    print(globalDistance)
+
+    # TODO two-point crossover
+    # for t in range(tMax):
 
 
 GenericAlghorithm()
