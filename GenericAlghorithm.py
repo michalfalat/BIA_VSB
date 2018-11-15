@@ -97,8 +97,26 @@ def GeneratePopulationOfCities(popSize, cities):
     return population
 
 
+def ShowPlot(cities, population):
+    plt.cla()
+    x = [o.x for o in cities]
+    y = [o.y for o in cities]
+    plt.scatter(x, y, zorder=2)
+    for i in range(len(cities)):
+        plt.annotate(cities[i].name, (x[i], y[i]))
+
+    for i in range(len(population)-1):
+        linesX = [population[i].x, population[i+1].x]
+        linesY = [population[i].y, population[i+1].y]
+        plt.plot(linesX, linesY, zorder=1)
+    linesXLast = [population[len(cities)-1].x, population[0].x]
+    linesYLast = [population[len(cities)-1].y, population[0].y]
+    plt.plot(linesXLast, linesYLast, zorder=1)
+    # plt.pause(0.1)
+
+
 def GenericAlghorithm():
-    popSize = 50
+    popSize = 100
     cities = []
     cities.append(City(60, 200, 'A', 0))
     cities.append(City(80, 200, 'B', 1))
@@ -133,8 +151,10 @@ def GenericAlghorithm():
     #         currentPop += (population[i][j].name + ", ")
     #     print(currentPop + " distance: " + str(currentPopDistance))
 
-    tMax = 100
+    tMax = 500
 
+    C_param = 0.8
+    M_param = 0.01
     cityCount = len(cities)
     minPop = FindPopulationMinimum(population, distanceMatrix)
     minDistance = CalcPopulationDistance(minPop, distanceMatrix)
@@ -143,34 +163,45 @@ def GenericAlghorithm():
     for t in range(tMax):
         newPopulation = []
         for i in range(popSize):
+            rndCrossover = random.uniform(0, 1)
+            rndMutation = random.uniform(0, 1)
 
-            rndParentIdx = i
-            while rndParentIdx == i:
-                rndParentIdx = random.randint(0, popSize-1)
-            parent = population[rndParentIdx]
-            newIndividual = Crossover(parent, population[i])
-            rndIdx1 = random.randint(0, cityCount-1)
-            rndIdx2 = random.randint(0, cityCount-1)
+            if rndCrossover < C_param:
+                rndParentIdx = i
+                while rndParentIdx == i:
+                    rndParentIdx = random.randint(0, popSize-1)
+                parent = population[rndParentIdx]
+                newIndividual = Crossover(parent, population[i])
+            else:
+                newIndividual = population[i]
 
-            newIndividual = Mutation(newIndividual, rndIdx1, rndIdx2)
+            if rndMutation < M_param:
+                rndIdx1 = random.randint(0, cityCount-1)
+                rndIdx2 = random.randint(0, cityCount-1)
+                newIndividual = Mutation(newIndividual, rndIdx1, rndIdx2)
+
             if(CalcPopulationDistance(newIndividual, distanceMatrix) < CalcPopulationDistance(population[i], distanceMatrix)):
                 newPopulation.append(newIndividual)
             else:
                 newPopulation.append(population[i])
-            minPop = FindPopulationMinimum(newPopulation, distanceMatrix)
-            minDistance = CalcPopulationDistance(minPop, distanceMatrix)
-            if(minDistance < globalMinDistance):
-                globalMinDistance = minDistance
-                globalMinPop = minPop
+        minPop = FindPopulationMinimum(newPopulation, distanceMatrix)
+        minDistance = CalcPopulationDistance(minPop, distanceMatrix)
+        if(minDistance < globalMinDistance):
+            globalMinDistance = minDistance
+            globalMinPop = minPop
         # print(globalMinDistance)
         population = []
         population = newPopulation
+        #ShowPlot(cities, minPop)
 
     # print(globalMinDistance)
+
     currentPop = ""
     for j in range(len(globalMinPop)):
         currentPop += (globalMinPop[j].name + ", ")
     print(currentPop + " distance: " + str(globalMinDistance))
+    ShowPlot(cities, globalMinPop)
+    plt.show()
 
     # TODO two-point crossover
     # for t in range(tMax):
