@@ -49,10 +49,8 @@ def CalcDistanceMatrix(cities):
 def CalcPopulationDistance(population, distanceMatrix):
     distance = 0
     for i in range(len(population.cities) - 1):
-        # CalcCityDistance(population[i], population[i+1])
         distance += distanceMatrix[population.cities[i]
                                    .order][population.cities[i+1].order]
-    # CalcCityDistance(population[len(population)-1], population[0])
     distance += distanceMatrix[population.cities[len(
         population.cities)-1].order][population.cities[0].order]
     return distance
@@ -146,24 +144,14 @@ def GenericAlghorithm():
     distanceMatrix = CalcDistanceMatrix(cities)
 
     population = GeneratePopulationOfCities(popSize, cities, distanceMatrix)
-    # for i in range(popSize):
-    #     currentPop = ''
-    #     currentPopDistance = CalcPopulationDistance(
-    #         population[i], distanceMatrix)
-    #     for j in range(len(population[i])):
-
-    #         currentPop += (population[i][j].name + ", ")
-    #     print(currentPop + " distance: " + str(currentPopDistance))
 
     tMax = 500
-
     C_param = 0.9
     M_param = 0.08
     cityCount = len(cities)
+
     globalMinPop = FindPopulationMinimum(population, distanceMatrix)
-    #minDistance = CalcPopulationDistance(minPop, distanceMatrix)
-    #globalMinDistance = minDistance
-    #globalMinPop = minPop
+
     for t in range(tMax):
         newPopulation = []
         for i in range(popSize):
@@ -187,24 +175,17 @@ def GenericAlghorithm():
             population[i].calculateDistance(distanceMatrix)
 
             if(newIndividual.distance < population[i].distance):
-                #pop = Population(newIndividual.cities)
-                # pop.calculateDistance(distanceMatrix)
                 newPopulation.append(newIndividual)
             else:
-                #pop = Population(population[i].cities)
-                # pop.calculateDistance(distanceMatrix)
                 newPopulation.append(population[i])
         minPop = FindPopulationMinimum(newPopulation, distanceMatrix)
         minPop.calculateDistance(distanceMatrix)
-        #minDistance = CalcPopulationDistance(minPop, distanceMatrix)
         if(minPop.distance < globalMinPop.distance):
             globalMinPop = Population(minPop.cities)
             globalMinPop.calculateDistance(distanceMatrix)
             print("new minimum:" + str(minPop.distance))
             ShowPlot(cities, globalMinPop)
-        # print(globalMinDistance)
         population = []
-        # newPopulation.sort(key = operator.itemgetter(1))
         population = sorted(
             newPopulation, key=lambda x: x.distance, reverse=False)
 
