@@ -1,5 +1,6 @@
 import numpy as np
 import random
+import operator
 import math as m
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
@@ -13,6 +14,18 @@ class City:
         self.y = y
         self.name = name
         self.order = order
+
+
+class Population:
+    def __init__(self, cities, distance=0):
+        self.cities = cities
+        self.distance = distance
+
+    def append(self, city):
+        self.cities.append(city)
+
+    def calculateDistance(self, distanceMatrix):
+        self.distance = CalcPopulationDistance(self, distanceMatrix)
 
 
 def CalcCityDistance(cityA, cityB):
@@ -35,65 +48,56 @@ def CalcDistanceMatrix(cities):
 
 def CalcPopulationDistance(population, distanceMatrix):
     distance = 0
-    for i in range(len(population) - 1):
+    for i in range(len(population.cities) - 1):
         # CalcCityDistance(population[i], population[i+1])
-        distance += distanceMatrix[population[i].order][population[i+1].order]
+        distance += distanceMatrix[population.cities[i]
+                                   .order][population.cities[i+1].order]
     # CalcCityDistance(population[len(population)-1], population[0])
-    distance += distanceMatrix[population[len(
-        population)-1].order][population[0].order]
+    distance += distanceMatrix[population.cities[len(
+        population.cities)-1].order][population.cities[0].order]
     return distance
 
 
 def FindPopulationMinimum(populations, distanceMatrix):
-    minimum = CalcPopulationDistance(populations[0], distanceMatrix)
-    minPop = populations[0]
+    minimum = populations[0].distance
+    minimumLocalPop = populations[0]
     for i in range(len(populations)):
-        tmpDistance = CalcPopulationDistance(populations[i], distanceMatrix)
-        if(tmpDistance < minimum):
-            minimum = tmpDistance
-            minPop = populations[i]
-    return minPop
+        if(populations[i].distance < minimum):
+            minimum = populations[i].distance
+            minimumLocalPop = populations[i]
+    return minimumLocalPop
 
 
 def Mutation(population, idx1, idx2):
-    tmpCity = population[idx1]
-    population[idx1] = population[idx2]
-    population[idx2] = tmpCity
+    tmpCity = population.cities[idx1]
+    population.cities[idx1] = population.cities[idx2]
+    population.cities[idx2] = tmpCity
     return population
 
 
-def Crossover(p1, p2):
+def Crossover(chromosome1, chromosome2):
+    end = randint(0, len(chromosome1.cities))
+    start = randint(0, end)
+    section = chromosome1.cities[start:end]
+    offspring_genes = list(
+        gene if gene not in section else None for gene in chromosome2.cities)
+    g = (x for x in section)
+    for i, x in enumerate(offspring_genes):
+        if x is None:
+            offspring_genes[i] = next(g)
+    offspring = Population(offspring_genes)
 
-    newPop = p1
-    cityLength = len(p1)
-    start = random.randint(0, cityLength-1)
-    end = random.randint(0, cityLength-1)
-    if start > end:
-        start, end = end, start
-    for i in range(cityLength):
-        if (i >= start and i <= end):
-            for j in range(cityLength):
-                currentCity = p2[j]
-                replace = True
-                for k in range(cityLength):
-                    if (k >= i and k <= end):
-                        continue
-                    if (currentCity == newPop[k]):
-                        replace = False
-                        break
-
-                if replace == True:
-                    newPop[i] = currentCity
-                    break
-    return newPop
+    return offspring
 
 
-def GeneratePopulationOfCities(popSize, cities):
+def GeneratePopulationOfCities(popSize, cities, distanceMatrix):
     population = []
     for i in range(popSize):
         currentPop = cities[:]
         np.random.shuffle(currentPop)
-        population.append(currentPop)
+        p = Population(currentPop)
+        p.calculateDistance(distanceMatrix)
+        population.append(p)
     return population
 
 
@@ -105,14 +109,14 @@ def ShowPlot(cities, population):
     for i in range(len(cities)):
         plt.annotate(cities[i].name, (x[i], y[i]))
 
-    for i in range(len(population)-1):
-        linesX = [population[i].x, population[i+1].x]
-        linesY = [population[i].y, population[i+1].y]
+    for i in range(len(population.cities)-1):
+        linesX = [population.cities[i].x, population.cities[i+1].x]
+        linesY = [population.cities[i].y, population.cities[i+1].y]
         plt.plot(linesX, linesY, zorder=1)
-    linesXLast = [population[len(cities)-1].x, population[0].x]
-    linesYLast = [population[len(cities)-1].y, population[0].y]
+    linesXLast = [population.cities[len(cities)-1].x, population.cities[0].x]
+    linesYLast = [population.cities[len(cities)-1].y, population.cities[0].y]
     plt.plot(linesXLast, linesYLast, zorder=1)
-    # plt.pause(0.1)
+    plt.pause(0.1)
 
 
 def GenericAlghorithm():
@@ -141,7 +145,7 @@ def GenericAlghorithm():
 
     distanceMatrix = CalcDistanceMatrix(cities)
 
-    population = GeneratePopulationOfCities(popSize, cities)
+    population = GeneratePopulationOfCities(popSize, cities, distanceMatrix)
     # for i in range(popSize):
     #     currentPop = ''
     #     currentPopDistance = CalcPopulationDistance(
@@ -153,13 +157,13 @@ def GenericAlghorithm():
 
     tMax = 500
 
-    C_param = 0.8
-    M_param = 0.01
+    C_param = 0.9
+    M_param = 0.08
     cityCount = len(cities)
-    minPop = FindPopulationMinimum(population, distanceMatrix)
-    minDistance = CalcPopulationDistance(minPop, distanceMatrix)
-    globalMinDistance = minDistance
-    globalMinPop = minPop
+    globalMinPop = FindPopulationMinimum(population, distanceMatrix)
+    #minDistance = CalcPopulationDistance(minPop, distanceMatrix)
+    #globalMinDistance = minDistance
+    #globalMinPop = minPop
     for t in range(tMax):
         newPopulation = []
         for i in range(popSize):
@@ -169,7 +173,7 @@ def GenericAlghorithm():
             if rndCrossover < C_param:
                 rndParentIdx = i
                 while rndParentIdx == i:
-                    rndParentIdx = random.randint(0, popSize-1)
+                    rndParentIdx = random.randint(0, popSize/2)
                 parent = population[rndParentIdx]
                 newIndividual = Crossover(parent, population[i])
             else:
@@ -179,32 +183,38 @@ def GenericAlghorithm():
                 rndIdx1 = random.randint(0, cityCount-1)
                 rndIdx2 = random.randint(0, cityCount-1)
                 newIndividual = Mutation(newIndividual, rndIdx1, rndIdx2)
+            newIndividual.calculateDistance(distanceMatrix)
+            population[i].calculateDistance(distanceMatrix)
 
-            if(CalcPopulationDistance(newIndividual, distanceMatrix) < CalcPopulationDistance(population[i], distanceMatrix)):
+            if(newIndividual.distance < population[i].distance):
+                #pop = Population(newIndividual.cities)
+                # pop.calculateDistance(distanceMatrix)
                 newPopulation.append(newIndividual)
             else:
+                #pop = Population(population[i].cities)
+                # pop.calculateDistance(distanceMatrix)
                 newPopulation.append(population[i])
         minPop = FindPopulationMinimum(newPopulation, distanceMatrix)
-        minDistance = CalcPopulationDistance(minPop, distanceMatrix)
-        if(minDistance < globalMinDistance):
-            globalMinDistance = minDistance
-            globalMinPop = minPop
+        minPop.calculateDistance(distanceMatrix)
+        #minDistance = CalcPopulationDistance(minPop, distanceMatrix)
+        if(minPop.distance < globalMinPop.distance):
+            globalMinPop = Population(minPop.cities)
+            globalMinPop.calculateDistance(distanceMatrix)
+            print("new minimum:" + str(minPop.distance))
+            ShowPlot(cities, globalMinPop)
         # print(globalMinDistance)
         population = []
-        population = newPopulation
-        #ShowPlot(cities, minPop)
+        # newPopulation.sort(key = operator.itemgetter(1))
+        population = sorted(
+            newPopulation, key=lambda x: x.distance, reverse=False)
 
     # print(globalMinDistance)
 
     currentPop = ""
-    for j in range(len(globalMinPop)):
-        currentPop += (globalMinPop[j].name + ", ")
-    print(currentPop + " distance: " + str(globalMinDistance))
-    ShowPlot(cities, globalMinPop)
+    for j in range(len(globalMinPop.cities)):
+        currentPop += (globalMinPop.cities[j].name + ", ")
+    print(currentPop + " distance: " + str(globalMinPop.distance))
     plt.show()
-
-    # TODO two-point crossover
-    # for t in range(tMax):
 
 
 GenericAlghorithm()
