@@ -142,7 +142,7 @@ def ShowPlot(cities, population):
     plt.pause(0.1)
 
 
-def GenericAlghorithm():
+def GeneticAlghorithm():
     popSize = 100
     cities = GenerateCities()
 
@@ -203,4 +203,4 @@ def GenericAlghorithm():
     plt.show()
 
 
-GenericAlghorithm()
+GeneticAlghorithm()
