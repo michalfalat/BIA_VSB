@@ -46,6 +46,31 @@ def CalcDistanceMatrix(cities):
     return distanceMatrix
 
 
+def GenerateCities():
+    cities = []
+    cities.append(City(60, 200, 'A', 0))
+    cities.append(City(80, 200, 'B', 1))
+    cities.append(City(80, 180, 'C', 2))
+    cities.append(City(140, 180, 'D', 3))
+    cities.append(City(20, 160, 'E', 4))
+    cities.append(City(100, 160, 'F', 5))
+    cities.append(City(200, 160, 'G', 6))
+    cities.append(City(140, 140, 'H', 7))
+    cities.append(City(40, 120, 'I', 8))
+    cities.append(City(100, 120, 'J', 9))
+    cities.append(City(180, 100, 'K', 10))
+    cities.append(City(60, 80, 'L', 11))
+    cities.append(City(120, 80, 'M', 12))
+    cities.append(City(180, 60, 'N', 13))
+    cities.append(City(20, 40, 'O', 14))
+    cities.append(City(100, 40, 'P', 15))
+    cities.append(City(200, 40, 'Q', 16))
+    cities.append(City(20, 20, 'R', 17))
+    cities.append(City(60, 20, 'S', 18))
+    cities.append(City(160, 20, 'T', 19))
+    return cities
+
+
 def CalcPopulationDistance(population, distanceMatrix):
     distance = 0
     for i in range(len(population.cities) - 1):
@@ -119,27 +144,7 @@ def ShowPlot(cities, population):
 
 def GenericAlghorithm():
     popSize = 100
-    cities = []
-    cities.append(City(60, 200, 'A', 0))
-    cities.append(City(80, 200, 'B', 1))
-    cities.append(City(80, 180, 'C', 2))
-    cities.append(City(140, 180, 'D', 3))
-    cities.append(City(20, 160, 'E', 4))
-    cities.append(City(100, 160, 'F', 5))
-    cities.append(City(200, 160, 'G', 6))
-    cities.append(City(140, 140, 'H', 7))
-    cities.append(City(40, 120, 'I', 8))
-    cities.append(City(100, 120, 'J', 9))
-    cities.append(City(180, 100, 'K', 10))
-    cities.append(City(60, 80, 'L', 11))
-    cities.append(City(120, 80, 'M', 12))
-    cities.append(City(180, 60, 'N', 13))
-    cities.append(City(20, 40, 'O', 14))
-    cities.append(City(100, 40, 'P', 15))
-    cities.append(City(200, 40, 'Q', 16))
-    cities.append(City(20, 20, 'R', 17))
-    cities.append(City(60, 20, 'S', 18))
-    cities.append(City(160, 20, 'T', 19))
+    cities = GenerateCities()
 
     distanceMatrix = CalcDistanceMatrix(cities)
 
