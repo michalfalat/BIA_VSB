@@ -225,6 +225,7 @@ def aco():
         for j in range(rank):
             row.append(calcCityDistance(cities[i], cities[j]))
         cost_matrix.append(row)
+    #ant_count: int, generations: int, alpha: float, beta: float, rho: float, q: int, strategy: int):
     aco = ACO(10, 100, 1.0, 10.0, 0.5, 10, 2)
     graph = Graph(cost_matrix, rank)
     path, cost = aco.solve(graph, cities)

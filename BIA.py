@@ -146,6 +146,16 @@ def GetPRT(dim,ptr_value):
     
     return x
 
+
+def CalcuateEuclideanDistance(vec1, vec2):
+    sum = 0
+    for i in range(len(vec1)):
+        sum += pow(abs(vec2[i] - vec1[i]), 2)
+
+    sum = m.sqrt(sum)
+    return sum
+
+
 def GetFunction(data, func):
     if func =='sphere':
         return SphereFunction(data)
@@ -511,6 +521,84 @@ def SimulatedAnnealingAlghorithm(startCoordinates, func, printing = False, draw 
 
 
 
+def EvolutionStrategy():
+    popSize = 20
+    generations = 50
+    def_min = -30
+    def_max = 30
+
+    sigma = 0.8
+    c_d = 0.8
+
+    func = 'ackley'
+
+    fig = plt.figure()
+    ax = fig.gca(projection='3d')
+    x = y = np.arange(def_min, def_max, stepDrawing)
+    X, Y = np.meshgrid(x, y)
+    zs = np.array([GetFunction((x, y), func) for x, y in zip(np.ravel(X), np.ravel(Y))])
+    Z = zs.reshape(X.shape)
+    surf = ax.plot_surface(X, Y, Z, rstride=1, cstride=1, cmap='viridis', edgecolor='none')
+
+    population = []
+    for i in range(popSize):
+        population.append(GenerateRandomIndividualPoint(def_min, def_max))
+
+    for i in range(popSize):
+        population[i].setZ(GetFunction(population[i].coordinates, func))
+
+        # Find minimum in new population
+    minimum = FindGlobalMininum(population)
+
+    print("Sigma: " + str(sigma) + "\t\t Minimum: " + str(minimum.z))
+
+    for gen in range(generations):
+
+        ax.clear()
+        ax.plot_surface(X, Y, Z, rstride=1, cstride=1, cmap='viridis', edgecolor='none')
+        newPopulation = []
+        successMutations = 0
+        for pop in range(popSize):
+            #distance = CalcuateEuclideanDistance(minimum.coordinates, population[pop].coordinates)
+            #sigma = sigma * (distance / popSize)
+            mutatedIndividual = GenerateRandomIndividualPoint(def_min, def_max)
+            new_x = np.random.uniform(def_min, def_max, 1)[0] * sigma
+            new_y = np.random.uniform(def_min, def_max, 1)[0] * sigma
+            mutatedIndividual.coordinates = (new_x, new_y)
+            mutatedIndividual.setZ(GetFunction(mutatedIndividual.coordinates, func))
+
+            if (mutatedIndividual.z < population[pop].z):
+                newPopulation.append(mutatedIndividual)
+                successMutations +=  1
+            else:
+                newPopulation.append(population[pop])
+            
+
+        probability = successMutations / popSize
+        if probability < 1/5:
+            sigma = sigma * c_d
+        elif probability > 1/5:
+            sigma = sigma / c_d
+
+        population = []
+        population = newPopulation
+
+            # Find minimum in new population
+        minimum = FindGlobalMininum(newPopulation)
+
+        print("Sigma: " + str(sigma) + "\t\t Minimum: " + str(minimum.z))
+
+        ax.scatter(minimum.coordinates[0], minimum.coordinates[1], minimum.z-0.2, color="b", s=50)
+
+        plt.pause(0.01)
+    #plt.show()
+
+
+
+
+
+
+
 startPoint = (-15,10)
 
 def_min = -50
@@ -619,4 +707,6 @@ def_max =  30
 #SomaAlgorithm('ackley')
 #ParticleSwarm('sphere',0.2,0.2)
 
-DiffetentialAlgorithm(def_min,def_max, 'sphere')
+#DiffetentialAlgorithm(def_min,def_max, 'sphere')
+
+EvolutionStrategy()
