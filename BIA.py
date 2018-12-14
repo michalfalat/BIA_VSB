@@ -377,7 +377,7 @@ def BlindAlghorithm(startCoordinates, iterations, func):
     print("Plot draw  finished")
     return lowestIndividualPoint.z
 
-def DiffetentialAlgorithm(defMin, defMax, func):
+def DiffetentialAlgorithm(defMin, defMax, func, strategy):
     F = 0.7
     CR = 0.75
     popLength = 20
@@ -410,8 +410,10 @@ def DiffetentialAlgorithm(defMin, defMax, func):
             finalCoords = []
             #newPoint=  IndividualPoint([0,0])
             diffVector = GetDifferentialVector(population[i])
-            noise = CalculateNoise(diffVector[0], diffVector[1], diffVector[2], F, dim)
-            #noise = CalculateNoiseCurrentToBest(population[i], minimum, diffVector[0], diffVector[1], F, dim)
+            if(strategy == 'RAND'):
+                noise = CalculateNoiseRand(diffVector[0], diffVector[1], diffVector[2], F, dim)
+            elif strategy == 'CURRENT_TO_BEST':
+                noise = CalculateNoiseCurrentToBest(population[i], minimum, diffVector[0], diffVector[1], F, dim)
             for coor in range(dim):
                 rNumber = random.uniform(0,1)
                 if (rNumber < CR):
@@ -432,7 +434,7 @@ def DiffetentialAlgorithm(defMin, defMax, func):
     plt.show()
         
 
-def CalculateNoise(p1,p2,p3, F, dim):
+def CalculateNoiseRand(p1,p2,p3, F, dim):
     coords = []
     for i in range(dim):
         coords.append(p1.coordinates[i] + F * (p2.coordinates[i] - p3.coordinates[i])),
@@ -707,6 +709,13 @@ def_max =  30
 #SomaAlgorithm('ackley')
 #ParticleSwarm('sphere',0.2,0.2)
 
-#DiffetentialAlgorithm(def_min,def_max, 'sphere')
 
-EvolutionStrategy()
+#EvolutionStrategy()
+
+DiffetentialAlgorithm(def_min, def_max, 'ackley', 'RAND')
+DiffetentialAlgorithm(def_min, def_max, 'ackley', 'CURRENT_TO_BEST')
+
+
+DiffetentialAlgorithm(def_min, def_max, 'sphere', 'RAND')
+DiffetentialAlgorithm(def_min, def_max, 'sphere', 'CURRENT_TO_BEST')
+
